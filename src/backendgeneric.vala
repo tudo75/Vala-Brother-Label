@@ -24,7 +24,7 @@ namespace ValaBrotherLabel {
         protected Object? read_dev = null;
 
         // Define an error domain quark for this class
-        private static GLib.Quark error_quark = GLib.Quark.from_string("brotherql-backend-error");
+        private static GLib.Quark error_quark = GLib.Quark.from_string("brotherlabel-backend-error");
 
         // Define error codes
         public enum BackendError {
@@ -35,7 +35,7 @@ namespace ValaBrotherLabel {
         public BackendGeneric (Object device_specifier) throws GLib.Error {
             // The constructor expects subclass implementation
             //throw new ValaBrotherLabel.BrotherQLError.NOT_IMPLEMENTED("Not implemented");
-            throw new GLib.Error.literal (error_quark, (int) BackendError.NOT_IMPLEMENTED, "Not implemented");
+            throw new GLib.Error.literal (error_quark, (int) BackendError.NOT_IMPLEMENTED, "_Not implemented");
         }
 
         // Protected virtual write method to be overridden

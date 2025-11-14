@@ -35,6 +35,9 @@ config_header = configure_file(
 # Specify the source files
 src = files(
     'src/application.vala',
+    'src/backendgeneric.vala',
+    'src/backendusb.vala',
+    #'src/labels.vala',
 )
 
 # Define the executable

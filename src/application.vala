@@ -68,12 +68,12 @@ namespace ValaBrotherLabel {
             }
 
             Posix.fcntl (stdout.fileno (), Posix.F_SETFL, Posix.O_NONBLOCK);
-
+/*
             if (filenames == null || filenames[0] == null || filenames[1] == null) {
                 print ("%s\n", help);
                 return -1;
             }
-
+*/
             try {
                 Application app = new Application ();
             } catch (Error e) {
@@ -88,6 +88,7 @@ namespace ValaBrotherLabel {
         public Application() {
             // Initialize the CLI application
             print("Welcome to the Vala CLI Application!\n");
+            new BackendUSB ();
         }
     }
 }
