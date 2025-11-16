@@ -88,7 +88,7 @@ namespace ValaBrotherLabel {
         public Application() {
             // Initialize the CLI application
             print("Welcome to the Vala CLI Application!\n");
-            new BackendUSB ();
+            BackendUSB.list_available_devices ();
         }
     }
 }

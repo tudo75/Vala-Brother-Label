@@ -17,18 +17,35 @@
  */
 
 namespace ValaBrotherLabel {
+    
+    public class UsbDeviceWrapper : GLib.Object {
+        public LibUSB.Device device;
 
-    public class BackendUSB {
+        public UsbDeviceWrapper(LibUSB.Device device) {
+            this.device = device;
+        }
+
+        public LibUSB.Device get_device() {
+            return device;
+        }
+    }
+
+    public class BackendUSB : BackendGeneric {
         private LibUSB.Device? dev;
         private int read_timeout = 10;    // ms
         private int write_timeout = 15000; // ms
         private string strategy = "try_twice";
 
-        public static LibUSB.Device[] list_available_devices() {
-
+        /**
+        * list_available_devices:
+        *
+        * Return the list af all USB connected devices
+        */
+        public static GLib.List<DeviceIdentifier> list_available_devices() {
             // declare objects
             LibUSB.Context context;
             LibUSB.Device[] devices;
+            GLib.List<DeviceIdentifier> dictionaries = new GLib.List<DeviceIdentifier> ();
 
             // initialize LibUSB and get the device list
             LibUSB.Context.init (out context);
@@ -40,33 +57,47 @@ namespace ValaBrotherLabel {
             int i = 0;
             while (devices[i] != null)
             {
-                var dev = devices[i];
+                string identifier = "";
+                LibUSB.Device device = devices[i];
+                LibUSB.DeviceHandle handle = null;
+                string sn = "";
 
-                // we print all values in hexadecimal here
-
-                stdout.printf ("\n Bus number : %04x", dev.get_bus_number ());
-                stdout.printf ("\n Address : %04x", dev.get_device_address ());
-
-                LibUSB.DeviceDescriptor desc = LibUSB.DeviceDescriptor (dev);
-                stdout.printf ("\n Vendor ID : %04x",  desc.idVendor);
-                stdout.printf ("\n Product ID : %04x", desc.idProduct);
-                stdout.printf ("\n iSerialNumber : %10x", desc.iSerialNumber);
-                stdout.printf ("\n iProduct : %10x", desc.iProduct);
-                stdout.printf ("\n bDeviceProtocol : %10x", desc.bDeviceProtocol);
-                stdout.printf ("\n bDeviceClass : %10x", desc.bDeviceClass);
-                stdout.printf ("\n bDescriptorType : %10x", desc.bDescriptorType);
-                stdout.printf ("\n bcdDevice : %10x", desc.bcdDevice);
-
-                stdout.printf ("\n");
+                LibUSB.DeviceDescriptor desc = LibUSB.DeviceDescriptor (device);
+                if (desc.idVendor.to_string("0x%04x") == "0x04f9") { // 0x04f9 Brother vendor id
+                    stdout.printf ("\n Vendor ID : \t\t%04x",  desc.idVendor);
+                    stdout.printf ("\n Vendor ID : \t\t%s",  desc.idVendor.to_string("%04x"));
+                    stdout.printf ("\n Product ID : \t\t%04x", desc.idProduct);
+                    stdout.printf ("\n iSerialNumber : \t%04x", desc.iSerialNumber);
+                    device.open(out handle);
+                    if (handle != null) {
+                        uint8[] data = new uint8[33];
+                        handle.get_string_descriptor_ascii(desc.iSerialNumber, data);
+                        data[32] = '\0';
+                        sn = (string) data;
+                        stdout.printf (@"\n\t SerialNumber : %s", sn);
+                        
+                        identifier = "usb://%04x:%04x/%s".printf(desc.idVendor, desc.idProduct, sn);
+                    } else {
+                        identifier = "usb://%04x:%04x".printf(desc.idVendor, desc.idProduct);
+                    }
+                    stdout.printf ("\n identifier : \t%s", identifier);
+                    dictionaries.append (new DeviceIdentifier(identifier, new UsbDeviceWrapper (device)));
+                    stdout.printf ("\n");
+                }
                 i++;
             }
 
-            return devices;
+            return dictionaries;
         }
 
 
-        public BackendUSB() {
-            list_available_devices();
+        public BackendUSB(string identifier) {
+            // constructor body
+            try {
+                base(identifier);
+            } catch (GLib.Error e) {
+                stdout.printf("Error form BackendUSB:\n %s\n", e.message);
+            }
         }
     }
 }

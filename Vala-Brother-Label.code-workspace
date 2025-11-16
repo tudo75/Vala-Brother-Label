@@ -5,7 +5,7 @@
 		}
     ],
 	"settings": {
-		"C_Cpp.default.compileCommands": "/home/nick/dev-projects/Vala-Brother-Label/build/compile_commands.json",
+		"C_Cpp.default.compileCommands": "/home/nick/dev_projects/Vala-Brother-Label/build/compile_commands.json",
 		"C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild"
 	}
 }

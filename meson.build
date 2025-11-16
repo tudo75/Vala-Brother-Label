@@ -37,6 +37,7 @@ src = files(
     'src/application.vala',
     'src/backendgeneric.vala',
     'src/backendusb.vala',
+    'src/deviceidentifier.vala',
     #'src/labels.vala',
 )
 
