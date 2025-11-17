@@ -31,10 +31,6 @@ namespace ValaBrotherLabel {
     }
 
     public class BackendUSB : BackendGeneric {
-        private LibUSB.Device? dev;
-        private int read_timeout = 10;    // ms
-        private int write_timeout = 15000; // ms
-        private string strategy = "try_twice";
 
         /**
         * list_available_devices:
@@ -93,8 +89,66 @@ namespace ValaBrotherLabel {
 
         public BackendUSB(string identifier) {
             // constructor body
+            LibUSB.Device? dev = null;
+            int read_timeout = 10;    // ms
+            int write_timeout = 15000; // ms
+            string strategy = "try_twice";
             try {
                 base(identifier);
+                string devstr = identifier;
+                if (devstr.has_prefix("usb://")) {
+                    devstr = devstr.substring(6);
+                    string[] parts = devstr.split("/");
+                    foreach (var d in list_available_devices()) {
+                        var printer = (LibUSB.Device) d.instance;
+                        LibUSB.DeviceDescriptor desc;
+                        printer.get_device_descriptor(out desc);
+                        
+                        LibUSB.DeviceHandle handle;
+                        printer.open(out handle);
+                        if (handle != null) {
+                            uint8[] data = new uint8[33];
+                            handle.get_string_descriptor_ascii(desc.iSerialNumber, data);
+                            data[32] = '\0';
+                            if (parts.length > 1) {
+                                if (identifier == "usb://%04x:%04x/%s".printf(desc.idVendor, desc.idProduct, (string) data)) {
+                                    dev = printer;
+                                    break;
+                                }
+                            } else {
+                                if (identifier == "usb://%04x:%04x".printf(desc.idVendor, desc.idProduct)) {
+                                    dev = printer;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (dev == null) {
+                        throw new GLib.Error(BackendGeneric.error_quark, LibUSB.Error.NO_DEVICE, _("Device not found"));
+                    }
+                    /* TODO
+                    // Detach kernel driver if active (if supported)
+                    try {
+                        if (dev.isKernelDriverActive(0)) {
+                            dev.detachKernelDriver(0);
+                            this.was_kernel_driver_active = true;
+                        }
+                    } catch (Error) {
+                        this.was_kernel_driver_active = false;
+                    }
+
+                    this.dev.setConfiguration();
+
+                    var cfg = this.dev.getActiveConfiguration();
+                    this.intf = cfg.findInterface(0);
+
+                    this.ep_in = this.intf.findEndpoint(e => e.direction == EndpointDirection.IN);
+                    this.ep_out = this.intf.findEndpoint(e => e.direction == EndpointDirection.OUT);
+
+                    if (this.ep_in == null || this.ep_out == null)
+                        throw new Error.FAILED("Could not find required endpoints");
+                    */
+                }
             } catch (GLib.Error e) {
                 stdout.printf("Error form BackendUSB:\n %s\n", e.message);
             }
