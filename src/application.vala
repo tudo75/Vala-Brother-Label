@@ -26,27 +26,21 @@ namespace ValaBrotherLabel {
         private const string APP_LANG_DOMAIN = Constants.GETTEXT_PACKAGE;
         private const string APP_INSTALL_PREFIX = Constants.PREFIX;
 
-        private static int capture_width = -1;
-        private static int capture_number = -1;
-        private static string[] filenames = null;
         private static bool version = false;
+        private static bool debug = false;
 
         private static string help;
 
         private const GLib.OptionEntry[] entries = {
             // --version
-            { "version", 'v', GLib.OptionFlags.NONE, GLib.OptionArg.NONE, ref version, "Display vThumb version number", null },
-
-            { "size", 's', GLib.OptionFlags.NONE, GLib.OptionArg.INT, ref capture_width, "Width size of individual screenshots of the gallery", null },
-            { "gallery", 'g', GLib.OptionFlags.NONE, GLib.OptionArg.INT, ref capture_number, "Output a gallery of the given number (3 is default) of screenshots", null },
-            { GLib.OPTION_REMAINING, '\0', 0, GLib.OptionArg.FILENAME_ARRAY, ref filenames, null, "[INPUT FILE] [OUTPUT FILE]" },
+            { "version", 'v', GLib.OptionFlags.NONE, GLib.OptionArg.NONE, ref version, "Display app version number", null },
+            { "debug", 's', GLib.OptionFlags.NONE, GLib.OptionArg.NONE, ref debug, "Enable output of the debug messages.", null },
             { null }
         };
 
         public static int main (string[] args) {
             GLib.OptionGroup options;
             GLib.OptionContext context;
-        
 
             try {
                 options = Gst.init_get_option_group ();
@@ -65,6 +59,10 @@ namespace ValaBrotherLabel {
             if (version) {
                 print (_("Version: %s\n"), VERSION);
                 return 0;
+            }
+
+            if (debug) {
+                print (_("Debug messages activated.\n"));
             }
 
             Posix.fcntl (stdout.fileno (), Posix.F_SETFL, Posix.O_NONBLOCK);
