@@ -87,12 +87,14 @@ namespace ValaBrotherLabel {
         }
 
 
-        public BackendUSB(string identifier) {
+        public BackendUSB(string identifier) throws GLib.Error {
             // constructor body
             LibUSB.Device? dev = null;
             int read_timeout = 10;    // ms
             int write_timeout = 15000; // ms
             string strategy = "try_twice";
+            bool was_kernel_driver_active = false;
+
             try {
                 base(identifier);
                 string devstr = identifier;
@@ -126,16 +128,21 @@ namespace ValaBrotherLabel {
                     if (dev == null) {
                         throw new GLib.Error(BackendGeneric.error_quark, LibUSB.Error.NO_DEVICE, _("Device not found"));
                     }
-                    /* TODO
                     // Detach kernel driver if active (if supported)
-                    try {
-                        if (dev.isKernelDriverActive(0)) {
-                            dev.detachKernelDriver(0);
-                            this.was_kernel_driver_active = true;
+                    LibUSB.DeviceHandle handle;
+                    int get_handle = dev.open(out handle);                        
+                    if ( get_handle == 1) {
+                        if (handle.kernel_driver_active(0) == 1) {
+                            handle.detach_kernel_driver(0);
+                            was_kernel_driver_active = true;
                         }
-                    } catch (Error) {
-                        this.was_kernel_driver_active = false;
+                    } else {
+                        was_kernel_driver_active = false;
                     }
+                    int config;
+                    handle.get_configuration(out config);
+                    
+                    /* TODO
 
                     this.dev.setConfiguration();
 
